@@ -6,6 +6,17 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <title>算法作业 红包 show</title>
 
+<style type="text/css">
+.bg {
+    float: right;
+    width:300px;
+}
+#result {
+    position: absolute; 
+    top: 100px; 
+    left: 350px;
+}
+</style>
 
 <!-- build:css({.tmp,app}) styles/main.css -->    
 <link rel="stylesheet" href="static/css/bootstrap.css">
@@ -38,5 +49,18 @@
     <input type="submit" value="生成" />
 
 </form>
+
+</hr>
+
+{% for e in hb_list %}
+<div id="bg" >
+    <img src="/static/img/small_hb.png" alt="HIGH">
+    <div >
+        <p>恭喜 </p>
+        <p> 你抢到了 {{ e }} 元 </p>
+    </div>
+</div>
+
+{% endfor %}
 </body>
 </html>
