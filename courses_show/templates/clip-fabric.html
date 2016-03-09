@@ -1,0 +1,100 @@
+<!doctype html>
+<!--[if gt IE 8]><!--> 
+<html class="no-js"> <!--<![endif]-->
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>算法作业 布料裁剪 show</title>
+
+
+<style type="text/css">
+
+.qhb{
+    border: none;
+    width: 338px; 
+    height: 153px; 
+    background: url(/static/img/qhb.jpg) no-repeat center;
+    cursor:pointer;
+}
+
+#result {
+    position: absolute; 
+    top: 100px; 
+    left: 350px;
+}
+
+#fail {
+    position: absolute; 
+    top: 100px; 
+    left: 150px;
+}
+</style>
+<!-- build:css({.tmp,app}) styles/main.css 
+<link rel="stylesheet" href="static/css/bootstrap.css">
+<link rel="stylesheet" href="static/css/main.css">
+ endbuild -->
+<script src="/static/js/processing.min.js"></script>
+<script type="text/javascript">
+    var canvas = [200, 100];
+
+    var pieces = [[0, 0, 10, 10], [20, 20, 100, 10]];
+    var instance = null;
+
+    function initcanvas() {
+        instance = Processing.getInstanceById("cloth");
+        canvas[0] = document.getElementById("clength").value;
+        canvas[1] = document.getElementById("cwidth").value;
+        instance.setup();
+    }
+
+    function clip() {
+        var target = document.getElementById("target").value;
+        canvas[0] = document.getElementById("clength").value;
+        canvas[1] = document.getElementById("cwidth").value;
+        
+        $.post({
+            url: '/clip',
+            dataType: 'json',
+            data: JSON.stringify({'canvas':canvas, 'pieces':target}),
+            success: function (data) {
+                pieces = data.solution;
+                console.log("success");
+                instance = Processing.getInstanceById("cloth");
+instance.setup();
+                instance.drawFabric();
+            }
+        });
+    }
+</script>
+</head>
+<body>
+
+<script src="//cdn.bootcss.com/jquery/2.2.1/jquery.min.js"></script>
+<!-- build:js scripts/modules.js 
+  <script src="/static/js/jquery-2.0.3.min.js"></script>
+  <script src="/static/js/angular.min.js"></script>
+  <script src="/static/js/d3.min.js"></script>
+-->  
+<!-- endbuild -->
+
+<!-- build:js({.tmp,app}) scripts/scripts.js 
+  <script src="static/js/app.js"></script>
+  <script src="static/js/controllers/main.js"></script>  
+  endbuild -->
+
+<div style="float:left">
+<p>请输入布匹大小</p>
+长度: <input id="clength" type="text" value="200" onchange="initcanvas()"></input>
+宽度: <input id="cwidth" type="text" value="100" onchange="initcanvas()"></input>
+
+<p>请输入目标块的大小</p>
+<p> 一行两个数字， 长度和宽度</p>
+<textarea id="target" style="height:250px; width:200px" onchange="clip()">
+</textarea>
+</div>
+<div style="float:right">
+<canvas id="cloth" data-processing-sources="/pde/clip-fabric.pde"></canvas>  
+</div>
+
+</body>
+</html>

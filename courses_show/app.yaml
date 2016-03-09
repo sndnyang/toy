@@ -16,6 +16,8 @@ handlers:
   static_files: index.html
   upload: index.html
 
+- url: /pde
+  static_dir: pde
 
 - url: /.*
   script: main.app
@@ -32,3 +34,4 @@ libraries:
 
 - name: numpy 
   version: "latest"
+
