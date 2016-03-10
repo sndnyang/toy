@@ -8,7 +8,7 @@ void setup() {
     else {
         times = max / canvas[1];
     }
-    size(canvas[0] * times, canvas[1] * times);
+    size(canvas[1] * times, canvas[0] * times);
     background(180);
     stroke(100);
 

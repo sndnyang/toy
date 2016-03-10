@@ -52,13 +52,19 @@
         canvas[0] = document.getElementById("clength").value;
         canvas[1] = document.getElementById("cwidth").value;
         
+        var radio = document.getElementsByName("form1");
+        var radioValue = "";
+        for (var i in radio) {
+            if (radio[i].checked) {
+                radioValue = radio[i].value;
+            }
+        }
         $.post({
             url: '/clip',
             dataType: 'json',
-            data: JSON.stringify({'canvas':canvas, 'pieces':target}),
+            data: JSON.stringify({'canvas':canvas, 'pieces':target, 'type':radioValue}),
             success: function (data) {
                 pieces = data.solution;
-                console.log("success");
                 instance = Processing.getInstanceById("cloth");
 instance.setup();
                 instance.drawFabric();
@@ -83,6 +89,8 @@ instance.setup();
   endbuild -->
 
 <div style="float:left">
+<input type = "radio" id = "form1" name = "form1" value = "search">全局搜索
+<input type = "radio" id = "form1" name = "form1" value = "greedy">贪心
 <p>请输入布匹大小</p>
 长度: <input id="clength" type="text" value="200" onchange="initcanvas()"></input>
 宽度: <input id="cwidth" type="text" value="100" onchange="initcanvas()"></input>
@@ -95,6 +103,11 @@ instance.setup();
 <div style="float:right">
 <canvas id="cloth" data-processing-sources="/pde/clip-fabric.pde"></canvas>  
 </div>
+
+<br>
+<div style="float:left">
+<pre> {{ source }} </pre>
+<div>
 
 </body>
 </html>
