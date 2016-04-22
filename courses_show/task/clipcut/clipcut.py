@@ -1,11 +1,15 @@
 # coding: utf-8
 
+import cgi
+import logging
+
+debug = 0
+
 try:
     import numpy as np
 except:
     np = None
 
-import cgi
 def clip_code():
     return cgi.escape(file(__file__.rstrip("c")).read())
 
@@ -16,12 +20,13 @@ def npAlter(r, c):
         temp.append(row)
     return temp
 
-def copy(origin):
+def copy(origin, h):
     if np:
-        target = np.zeros(origin.shape, dtype=np.int8)
+        target = np.zeros((h, len(origin[0])), dtype=np.int8)
     else:
-        target = npAlter(len(origin), len(origin[0]))
-    for i in range(len(origin)):
+        target = npAlter(h, len(origin[0]))
+
+    for i in range(h):
         for j in range(len(origin[1])):
             target[i][j] = origin[i][j]
     return target
@@ -54,6 +59,8 @@ class GeniusTailor:
         self.h = canvas[0]
         self.w = canvas[1]
         targets = sorted(targets, key=lambda x:max(x), reverse=True)
+        if debug == 1:
+            print targets
         self.targets = []
         for e in targets:
             e = list(e)
@@ -71,19 +78,16 @@ class GeniusTailor:
         self.solution = None
         self.solution_matrix = None
         self.per_node = []
-        self.m = init_matrix(self.canvas)
+        self.m = init_matrix((max(self.min_h, self.h), canvas[1]))
 
     def can_place(self, x, y, h, w):
 
-        if x+h+1 >= self.h or y+w+1 >= self.w:
+        if x+h-1 > self.h or y+w-1 > self.w:
             return False
 
-        if (self.m[x-1][y] <= 1 or self.m[x][y-1] <= 1) and\
-           (self.m[x+h+1][y] <= 1 or self.m[x+h][y-1] <= 1) and\
-           (self.m[x+h+1][y+w] <= 1 or self.m[x+h][y+w+1] <= 1) and\
-           (self.m[x-1][y+w] <= 1 or self.m[x][y+w+1] <= 1):
+        if (self.m[x-1][y] <= 1 or self.m[x][y-1] <= 1):
             return False
-        
+
         for i in range(x, x+h):
             if self.m[i][y] > 1: return False
             if self.m[i][y+w-1] > 1: return False
@@ -106,31 +110,44 @@ class GeniusTailor:
 
     def greedy(self, d):
         newh = self.height()
+
+        if debug == 2:
+            print "greedy at level ", d, len(self.targets)
         if newh > self.min_h: return
         
-        
         if d+1 > len(self.targets):
+            if debug == 2:
+                print "all used and get height", newh
             if newh < self.min_h:
                 self.min_h = newh
                 self.solution = []
                 for e in self.targets:
                     self.solution.append(e[:])
-                self.solution_matrix = copy(self.m)
+                self.solution_matrix = copy(self.m, self.min_h)
             return
          
         e = self.targets[d]
         self.per_node = sorted(self.per_node)
         plen = len(self.per_node)
+        if debug == 2:
+            print e, 'is to place'
+            commandLine(self.m)
         for (i, j) in self.per_node:
             flag = False
             if self.m[i][j] > 1: continue
+            if debug == 2:
+                print (i, j), " is ok peripheral"
             if self.can_place(i, j, e[0], e[1]):
+                if debug == 2:
+                    print (i, j), ' can place '
                 flag = True
                 self.place(i, j, e[0], e[1], e)
                 self.greedy(d+1)
                 self.unplace(e, plen)
 
             if self.can_place(i, j, e[1], e[0]):
+                if debug == 2:
+                    print (i, j), ' can place '
                 flag = True
                 self.place(i, j, e[1], e[0], e)
                 self.greedy(d+1)
@@ -145,7 +162,9 @@ class GeniusTailor:
         self.per_node = [(1, 1)]
         self.greedy(0)
         
-        #commandLine(self.solution_matrix)
+        if debug == 3:
+            commandLine(self.solution_matrix)
+            print(self.solution)
         return self.solution, self.min_h
 
     def clip_fabric(self):
@@ -206,7 +225,7 @@ class GeniusTailor:
                 self.solution = []
                 for e in self.targets:
                     self.solution.append(e[:])
-                self.solution_matrix = copy(self.m)
+                self.solution_matrix = copy(self.m, self.h)
                 
         for i in range(len(self.targets)):
             if self.used[i]: continue
@@ -243,6 +262,9 @@ if __name__ == '__main__':
     import sys
     import time
 
+    if len(sys.argv) > 1:
+        debug = int(sys.argv[1])
+
     start = time.time()
     print "please input your data in data.txt, like this:"
     print "200 200  clothlength width"
@@ -268,11 +290,11 @@ if __name__ == '__main__':
         pieces.append(l)
 
     demo = GeniusTailor((x, y), pieces)
-    s, h = demo.clip_greed()
+    s, h = demo.clip_greedy()
     end = time.time()
     print 'the minimum height is ', h
     print 'use time', end-start
     fp.close()
 
     import profile
-    profile.run("demo.clip_greedy()")
+    #profile.run("demo.clip_greedy()")
