@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>算法作业 代码判重 show</title>
+
+    <link href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+
+    <style type="text/css">
+
+    .codecontain {
+        min-height: 300px; 
+        width: 95%;
+    }
+    .container {
+        width: 100%;
+    }
+    .left {
+        width: 45%;
+        float: left;
+    }
+    .right {
+        width: 45%;
+        float: right;
+    }
+    .similar {
+        margin-left: auto;
+        margin-right: auto;
+        width: 10%;
+    }
+    </style>
+
+    </head>
+    <body>
+
+    <a href="/"><h2>返回首页</h2></a>
+        <br>
+        <h2>请粘贴两份源代码</h2>
+
+        <input type="submit" value="比对" onclick="cmp_source()"/>
+
+        <select id="method">
+            <option value="equal">全等判断</option>
+            <option value="similar">集合相似</option>
+            <option value="cos">余弦相似（未）</option>
+        </select>
+
+        <hr>
+        <div id="main">
+            <div class="container">
+                <div class="left">
+                    <textarea class="codecontain" id="source1"></textarea>
+                </div>
+                <div class="right">
+                    <textarea class="codecontain" id="source2"></textarea>
+                </div>
+            </div>
+            <div id="comment" class="container" style="display: none">
+                <div class="similar">
+                    注释相似度
+                    <p class="h2" id="commentsimilar">
+                    </p>
+                </div>
+                <hr>
+                <div class="left" id="comment1">
+                </div>
+                <div class="right"id="comment2">
+                </div>
+            </div>
+            <div id="variable" class="container" style="display: none">
+                <div class="similar">
+                    变量相似度
+                    <p class="h2" id="variablesimilar">
+                    </p>
+                </div>
+                <hr>
+                <div class="left" id="variable1">
+                </div>
+                <div class="right"id="variable2">
+                </div>
+            </div>
+            <div id="code" class="container" style="display: none">
+                <div class="similar">
+                    代码相似度
+                    <p class="h2" id="codesimilar">
+                    </p>
+                </div>
+                <hr>
+                <div class="left" id="code1">
+                </div>
+                <div class="right"id="code2">
+                </div>
+            </div>
+        </div>
+
+        <br>
+        <hr>
+        <div style="float:left">
+            <pre> {{ source }} </pre>
+        <div>
+
+        <script src="//cdn.bootcss.com/jquery/2.2.1/jquery.min.js"></script>
+        <script src="//cdn.bootcss.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+        <script src="/static/js/coderepeat.js"></script>
+    </body>
+</html>
