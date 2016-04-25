@@ -9,3 +9,8 @@ tags
 dist/
 build/
 *.spec
+pip*
+
+*.jar
+
+competition
