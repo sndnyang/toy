@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 
+import os
 import re
 import cgi
 from collections import defaultdict
@@ -8,6 +9,26 @@ IS_MULTI_COMMENT = False
 
 def repeat_code():
     return cgi.escape(file(__file__.rstrip("c")).read())
+
+def check_repeat(data, fname):
+    count = 0
+    total = 0
+    for fn in fname.split():
+        fn = os.path.join("competition/coderepeat", fn)
+        fp = file(fn)
+        lines = fp.readlines()
+        fp.close()
+        total += len(lines)
+
+    for e in data:
+        if len(e) != 2:
+            return -1
+        e = int(e[0]), int(e[1]) 
+        if e[0] and e[1]:
+            count += 1
+
+    return 2.0*count/total
+
 
 def equal(s1, s2):
     if s1 == s2:

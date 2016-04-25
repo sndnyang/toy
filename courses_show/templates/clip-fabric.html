@@ -34,19 +34,46 @@
 <link rel="stylesheet" href="static/css/main.css">
  endbuild -->
 
+<a href="/"><h2>返回首页</h2></a>
 <script src="//cdn.bootcss.com/jquery/2.2.1/jquery.min.js"></script>
 <script src="//cdn.bootcss.com/processing.js/1.4.16/processing.min.js"></script>
 <script type="text/javascript">
     var canvas = [200, 100];
 
     var pieces = [[0, 0, 10, 10], [20, 20, 100, 10]];
-    var instance = null;
+    var instance = Processing.getInstanceById("cloth");
 
     function initcanvas() {
         instance = Processing.getInstanceById("cloth");
         canvas[0] = document.getElementById("clength").value;
         canvas[1] = document.getElementById("cwidth").value;
         instance.setup();
+    }
+
+    function showSolution(data) {
+        pieces = data.solution;
+        var testdatas = data.data[0],
+            line = testdatas.split('\n')[0].split(' ');
+        canvas[0] = line[0];
+        canvas[1] = line[1];
+
+        $("#clength").val(line[0]);
+        $("#cwidth").val(line[1]);
+        $("#target").val(testdatas);
+        $("#solution").val(data.solution);
+        for (var i in pieces) {
+            pieces[i][2] = pieces[i][2] - pieces[i][0];
+            pieces[i][3] = pieces[i][3] - pieces[i][1];
+        }
+        if (typeof(instance) === "undefined") {
+            instance = Processing.getInstanceById("cloth");
+            instance.setup();
+            instance.drawFabric();
+        }
+        else {
+            instance.setup();
+            instance.drawFabric();
+        }
     }
 
     function clip() {
@@ -68,11 +95,36 @@
             success: function (data) {
                 pieces = data.solution;
                 instance = Processing.getInstanceById("cloth");
-instance.setup();
+                instance.setup();
                 instance.drawFabric();
             }
         });
     }
+</script>
+<script type="application/processing" data-processing-target="cloth">
+int times = 5;
+void setup() {
+    int max = 1000;
+    if (max / canvas[0] < max / canvas[1]) {
+        times = max / canvas[0];
+    }
+    else {
+        times = max / canvas[1];
+    }
+    size(canvas[1] * times, canvas[0] * times);
+    background(180);
+    stroke(100);
+
+}
+
+void drawFabric() {
+    for (int i = 0; i < pieces.length(); i++) {
+        for (int j = 0; j < 4; j++) {
+            pieces[i][j] *= times;
+        }
+        rect(pieces[i][0],pieces[i][1],pieces[i][2],pieces[i][3]);
+    }
+}
 </script>
 </head>
 <body>
@@ -100,9 +152,13 @@ instance.setup();
 <p> 一行两个数字， 长度和宽度</p>
 <textarea id="target" style="height:250px; width:200px" onchange="clip()">
 </textarea>
+<textarea id="solution" style="height:250px; width:200px">
+</textarea>
 </div>
 <div style="float:right">
-<canvas id="cloth" data-processing-sources="/pde/clip-fabric.pde"></canvas>  
+<!--<canvas id="cloth" data-processing-sources="/pde/clip-fabric.pde"></canvas>
+    -->
+<canvas id="cloth"></canvas>  
 </div>
 
 <br>
@@ -110,5 +166,9 @@ instance.setup();
 <pre> {{ source }} </pre>
 <div>
 
+<script src="/static/js/solution.js"></script>
+<script defer="defer" type="text/javascript">
+    $(document).ready(setTimeout(getSolution(), 1000));
+</script>
 </body>
 </html>

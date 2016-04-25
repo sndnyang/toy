@@ -1,5 +1,6 @@
 # coding: utf-8
 
+import os
 import cgi
 import logging
 
@@ -12,6 +13,66 @@ except:
 
 def clip_code():
     return cgi.escape(file(__file__.rstrip("c")).read())
+
+def overlap(a, b):
+    
+    if b[0] >= a[0] and b[0] <= a[2]:
+        return True
+    if b[2] >= a[0] and b[2] <= a[2]:
+        return True
+    if b[1] >= a[1] and b[1] <= a[3]:
+        return True
+    if b[3] >= a[1] and b[3] <= a[3]:
+        return True
+
+    if b[2] >= a[0] and b[0] <= a[0]:
+        return True
+    if b[2] >= a[2] and b[0] <= a[2]:
+        return True
+    if b[3] >= a[1] and b[1] <= a[1]:
+        return True
+    if b[3] >= a[3] and b[1] <= a[3]:
+        return True
+
+    return False
+
+def check_clip(data, fname):
+    fn = os.path.join("competition/clip", fname)
+    fp = file(fn)
+    content = fp.readlines()
+    fp.close()
+
+    cw, cl, n = [int(e) for e in content[0].strip().split()]
+    for i in range(len(data)):
+        for j in range(len(data[i])):
+            data[i][j] = int(data[i][j])
+
+    defects = [e.split() for e in content[n+1:]]
+    for i in range(len(defects)):
+        for j in range(len(defects[i])):
+            defects[i][j] = int(defects[i][j])
+
+    i = 1
+    for e in data:
+
+        for other in data[i:]:
+            if overlap(e, other):
+                logging.debug(e)
+                logging.debug(other)
+                return -1
+        for b in defects:
+            if overlap(e, b):
+                logging.debug(b)
+                return -1
+
+        i+=1
+    l = min(e[0] for e in data)
+    r = max(e[2] for e in data)
+    b = min(e[1] for e in data)
+    u = max(e[3] for e in data)
+    area = sum((e[2]-e[0])*(e[3]-e[1]) for e in data)
+    return 1.0*area/((u-b+1)*(r-l+1))
+
 
 def npAlter(r, c):
     temp = []
@@ -35,7 +96,6 @@ def copy(origin, h):
 def commandLine(m):
     for r in m:
         print ' '.join(str(e) for e in r)
-
 
 def init_matrix(canvas):
     if np:

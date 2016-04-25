@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block body %}
+
+    <a href="/"><h2>返回首页</h2></a>
+
+<header class="h1 text-center">{{ title }}</header>
+<header class="h2 text-center"> {{ competition.title }} </header>
+<div class="h4 text-center">
+<a href="/leaderboard.html?type=coderepeat">代码判重榜</a>
+<a href="/leaderboard.html?type=clip">布料剪切榜</a>
+</div>
+
+    <style type="text/css">
+th, td {
+    padding: 20px;
+}
+
+.matrix {
+    position: fixed;
+    display: none;
+    left: 10%;
+    width: 100%;
+    top: 50%;
+    background:#f3f8ff;
+    opacity:0.8;
+    z-index:100;
+}
+
+    </style>
+<div class="row-fluid" style="padding: 0 10px;">
+
+    <table class="offset2">
+        <tr>
+            <th>队名</th>
+            {% if en == 'clip' %}
+                {% for e in competition.files %}
+                <th>{{ e }}</th>
+                {% endfor %}
+            {% else %}
+                <th> showmatrix </th>
+            {% endif %}
+        </tr>
+        {% for team in teams %}
+        <tr>
+            <td>{{ team[0] }}</td>
+
+            {% if en == 'clip' %}
+                {% for e in team[1] %}
+                <td>
+                    <a id="show" href="/showSolution.html?name={{en}}&team={{team[0]}}&fname={{e[2]}}">
+                        {{ e[0] }}|{{ e[1] }}
+                    </a>
+                </td>
+                {% endfor %}
+            {% else %}
+                <td>
+            <a href="javascript:void(0)" onclick="showMatrix(this)">
+                展示
+            </a>
+                {% include 'matrix.html' %}
+                </td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+<script type="text/javascript">
+function showMatrix(obj) {
+    var p = $(obj).parent()[0];
+    var x = $(p).children("#matrix");
+    
+    $('.matrix').css("display", "none");
+    x.show();
+}
+</script>
+<script type="text/javascript">
+$(function () {
+    $(document).bind('keydown', 'esc',function (evt){
+         $('.matrix').css("display", "none");
+    });
+});
+</script>
+
+{% endblock %}
+

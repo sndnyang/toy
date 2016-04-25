@@ -1,13 +1,5 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>算法作业 代码判重 show</title>
-
-    <link href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
-
+{% extends "base.html" %}
+{% block body %}
     <style type="text/css">
 
     .codecontain {
@@ -31,9 +23,6 @@
         width: 10%;
     }
     </style>
-
-    </head>
-    <body>
 
     <a href="/"><h2>返回首页</h2></a>
         <br>
@@ -101,8 +90,11 @@
             <pre> {{ source }} </pre>
         <div>
 
-        <script src="//cdn.bootcss.com/jquery/2.2.1/jquery.min.js"></script>
-        <script src="//cdn.bootcss.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
         <script src="/static/js/coderepeat.js"></script>
-    </body>
-</html>
+        <script src="/static/js/solution.js"></script>
+
+
+<script defer="defer" type="text/javascript">
+    $(document).ready(getSolution());
+</script>
+{% endblock %}

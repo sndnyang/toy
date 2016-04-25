@@ -1,3 +1,4 @@
+
 function cmp_source() {
     var code1 = $("#source1").val(),
         code2 = $("#source2").val(),
@@ -18,6 +19,24 @@ function cmp_source() {
             showCodeSimilar(codes, "code");
         }
     });
+}
+
+function showSolution(data) {
+
+    var testdatas = data.data;
+    $("#source1").val(testdatas[0]);
+    $("#source2").val(testdatas[1]);
+    var pairData = [], data0=[], data1=[];
+    for (var i in data.solution) {
+        data0.push(data.solution[i][0]==="0"?-1:data.solution[i][0]);
+        data1.push(data.solution[i][1]==="0"?-1:data.solution[i][1]);
+    }
+    pairData.push(data0);
+    pairData.push(data1);
+
+    showCodeSimilar(pairData, "code");
+
+    $("#codesimilar").html("方法值:<br>"+data.value+"<br>标准值:<br>"+data.stdvalue);
 }
 
 function showCodeSimilar(pairData, part) {
@@ -113,4 +132,5 @@ function showSimilar(pairData, part) {
     $("#"+part+"1").html();
     $("#"+part+"2").html();
     $("#"+part+"similar").html(similarity+"%");
-            }
+}
+

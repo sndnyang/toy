@@ -1,0 +1,22 @@
+        <div class="matrix" id="matrix">
+            <table>
+                {{ team[0] }}
+            <tr>
+                {% for e in team[1] %}
+                <td>{{ e[2] }}</td>
+                {% endfor %}
+            </tr>
+            <tr>
+            {% for e in team[1] %}
+                <td>
+                    {% if en == 'coderepeat' %}
+                    <a id="show" href="/showSolution.html?name={{en}}&
+team={{team[0]}}&fname={{e[2]}}">
+                        {{ e[0] }}|{{ e[1] }}
+                    </a>
+                    {% endif %}
+                </td>
+            {% endfor %}
+            </tr>
+            </table>
+        </div>

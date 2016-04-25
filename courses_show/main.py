@@ -28,6 +28,8 @@ import webapp2
 import logging
 logging.getLogger().setLevel(logging.DEBUG)
 
+from datetime import datetime
+
 from task import *
 
 from model import *
@@ -132,17 +134,210 @@ class ClipPage(Handler):
         pieces.pop()
 
         tailor = GeniusTailor(canvas, pieces)
-        if type == "search":
-            s, h = tailor.clip_fabric()
+       #if type == "search":
+       #    s, h = tailor.clip_fabric()
+       #else:
+       #    s, h = tailor.clip_greedy()
+
+        solution = [[1, 2, 20, 30]]
+       #for r in s:
+       #    solution.append([r[5], r[4], r[3]-r[5], r[2]-r[4]])
+
+        self.response.out.write(json.dumps({'solution':solution},
+            ensure_ascii=False))
+
+
+class GetSolution(Handler):
+    def get(self):
+        name = self.request.get('name', '')
+        team = self.request.get('team', '')
+        fname = self.request.get('fname', '')
+
+        response = {'code': False}
+        testdatas = []
+        try:
+            current = ''
+            for fn in fname.split():
+                current = fn
+                fn = os.path.join("competition", name, fn)
+                fp = file(fn)
+                content = fp.read()
+                fp.close()
+                testdatas.append(content)
+        except:
+            response['info'] = '%s file not exist' % current
+            self.response.out.write(json.dumps(response,
+                ensure_ascii=False))
+            return
+
+        response['data'] = testdatas
+        q = SubmitRecord.query().filter(SubmitRecord.teamname == team, 
+                SubmitRecord.enname == name, SubmitRecord.fname == fname)
+        record = None
+        for e in q:
+            record = e
+        if not record:
+            code = False
+            solution = ''
+            stdvalue = False
+            value = False
         else:
-            s, h = tailor.clip_greedy()
-        logging.debug(s)
+            code = True
+            solution = record.data
+            stdvalue = record.stdvalue
+            value = record.value
 
-        solution = []
-        for r in s:
-            solution.append([r[5], r[4], r[3]-r[5], r[2]-r[4]])
+        response['solution'] = solution
+        response['code'] = code
+        response['value'] = value
+        response['stdvalue'] = stdvalue
 
-        self.response.out.write(json.dumps({'solution':solution}))
+        self.response.out.write(json.dumps(response,
+            ensure_ascii=False))
+
+class ShowSolutionPage(Handler):
+    def get(self):
+        name = self.request.get('name', '')
+        team = self.request.get('team', '')
+        fname = self.request.get('fname', '')
+        if name == '' or team == '':
+            self.render("index.html")
+        if name == 'clip':
+            self.render("clip-fabric.html", source='')
+        elif name == 'coderepeat':
+            self.render("coderepeat.html", source='')
+
+
+
+class RankPage(Handler):
+    def post(self):
+        data = json.loads(self.request.body)
+        type = data.get('type')
+        response = {'info': 'success'}
+        en_zh = {'clip': u'布料裁剪', 'coderepeat': u'代码判重'}
+        if type not in en_zh:
+            response['info'] = '%s not in %s' % (type, ['clip', 'coderepeat'])
+            self.response.out.write(json.dumps(response))
+            return
+
+        team = data.get('teamname')
+
+        if not team.startswith('xmu'):
+            response['info'] = 'you do not have the authority'
+            self.response.out.write(json.dumps(response))
+            return
+
+        q = User.query().filter(User.username == team)
+        user = None
+        for e in q:
+            user = e
+
+        if user:
+            last_time = user.last_edit
+            if last_time:
+                now = datetime.now()
+                differ = (now - last_time).seconds
+                if differ >= 60:
+                    user.last_edit = now
+                    user.put()
+                else:
+                    response['info'] = "submit too quick one time per minute"
+                    self.response.out.write(json.dumps(response))
+                    return
+        else:
+            now = datetime.now()
+            newuser = User(username = team, last_edit = now)
+            newuser.put()
+            user = newuser
+
+
+        fname = ' '.join(data.get('fname'))
+        result = data.get('data')
+        check_routine = {'clip': check_clip, 'coderepeat': check_repeat}
+        try:
+            stdvalue = check_routine[type](result, fname)
+        except Exception, e:
+            response['info'] = "%s, please contact administrator" % e
+
+            self.response.out.write(json.dumps(response))
+            return
+
+        if stdvalue == -1:
+            response['info'] = 'your answer not pass the check'
+            self.response.out.write(json.dumps(response))
+            return
+
+        value = float(data.get('value'))
+
+        q = SubmitRecord.query().filter(SubmitRecord.teamname == team, 
+                SubmitRecord.enname == type, SubmitRecord.fname == fname)
+        record = None
+        for e in q:
+            record = e
+
+        if not record:
+            rkey = ndb.Key(SubmitRecord, team+' '+ fname)
+            record = SubmitRecord(
+                    key = rkey,
+                    enname = type,
+                    zhname = en_zh[type],
+                    teamname = team,
+                    fname = fname,
+                    data = result,
+                    value = value,
+                    stdvalue = stdvalue
+                )
+        else:
+            record.fname = fname
+            record.data = result
+            record.value = value
+            record.stdvalue = stdvalue
+
+        user.last_edit = datetime.now()
+        record.put()
+
+        self.response.out.write(response)
+
+
+class LeaderBoardPage(Handler):
+    def get(self):
+        c = self.request.get('type', 'clip')
+        en_zh = {'coderepeat': u'代码判重', 'clip': u'布料裁剪'}
+        title = en_zh[c]
+        base_dir = os.path.join(os.path.dirname(__file__), "competition", c)
+
+        if not os.path.isdir(base_dir):
+            competition = {'title': title, 'files': []}
+            teams = []
+        else:
+            flists = []
+            for root, dirs, files in os.walk(base_dir):
+                for f in files:
+                    flists.append(f)
+
+            competition = {'title': title, 'files': flists}
+            q = SubmitRecord.query().filter(SubmitRecord.enname == c)
+            teams_fset = {}
+            for e in q:
+                name = e.teamname
+                if name not in teams_fset:
+                    if c == 'clip':
+                        teams_fset[name] = [False] * len(flists)
+                    else:
+                        teams_fset[name] = []
+
+                fname = e.fname
+                if c == 'coderepeat':
+                    teams_fset[name].append((e.stdvalue, e.value, fname))
+                elif c == 'clip': 
+                    teams_fset[name][flists.index(fname)] = (e.stdvalue, 
+                            e.value, fname)
+
+            teams = sorted(teams_fset.iteritems(), key=lambda d:d[1], 
+                    reverse = True)
+
+        self.render("leaderboard.html", title=u"琅琊算法榜", en=c,
+                competition = competition, teams=teams)
 
 class CodeRepeatPage(Handler):
     def get(self):
@@ -164,7 +359,8 @@ class CodeCmpPage(Handler):
         cs, vs, codes = compare_by_lines(code1, code2, cmpfunc)
         response = json.dumps({'comment': cs,
                                 'variable': vs,
-                                'code': codes})
+                                'code': codes},
+            ensure_ascii=False)
         self.response.out.write(response)
 
 
@@ -173,8 +369,12 @@ app = webapp2.WSGIApplication([
     ('/hb_stat.html', StatHongBaoPage),
     ('/qhb.html', HongBaoPage),
     ('/clip-fabric.html', ClipFabricPage),
+    ('/leaderboard.html', LeaderBoardPage),
+    ('/showSolution.html', ShowSolutionPage),
     ('/coderepeat.html', CodeRepeatPage),
     ('/clip', ClipPage),
+    ('/rank', RankPage),
     ('/cmpcode', CodeCmpPage),
+    ('/getsolution', GetSolution),
     ('/who-is-absent.html', AbsentPage)
 ], debug=True)
