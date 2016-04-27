@@ -213,10 +213,13 @@ def compare_by_lines(content1, content2, cmpfunc):
     l = print_lcs(m, len(a_content), len(b_content), a_content, b_content,
             cmpfunc)
 
+    a_length = len(a_content)
+    b_length = len(b_content)
+
     comment = (a_comment, b_comment, 0)
     variables = (a_vars, b_vars, 0)
     code = convert_lcs(l, (a_line_map, b_line_map))
-    code.append(1.0*m[len(a_content)][len(b_content)])
+    code.append(2.0 * m[a_length][b_length] / (a_length + b_length))
     return comment, variables, code
 
 def compare_files(f1, f2, cmpfunc):
@@ -226,15 +229,20 @@ def compare_files(f1, f2, cmpfunc):
 
 if __name__ == "__main__":
     import sys
-    print len(sys.argv)
+    cmp_func = equal
     if len(sys.argv) < 3:
         aname = "G:/project/dataset/codeplagiarism/A1/3-3/1.java"
         bname = "G:/project/dataset/codeplagiarism/A1/3-3/2.java"
     else:
         aname = sys.argv[1]
         bname = sys.argv[2]
+        if len(sys.argv) == 4:
+            if sys.argv[3] == '1':
+                cmp_func = similar
 
-    comments, vs, code = compare_files(aname, bname, equal)
-    print code[0]
-    print code[1]
+    comments, vs, code = compare_files(aname, bname, cmp_func)
+   #print code[0]
+   #print code[1]
+   #for i in range(len(code[0])):
+   #    print code[0][i], code[1][i]
     print code[2]
