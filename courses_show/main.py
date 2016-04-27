@@ -237,7 +237,7 @@ class RankPage(Handler):
             if last_time:
                 now = datetime.now()
                 differ = (now - last_time).seconds
-                if differ >= 60:
+                if differ >= 3:
                     user.last_edit = now
                     user.put()
                 else:
@@ -256,6 +256,7 @@ class RankPage(Handler):
         check_routine = {'clip': check_clip, 'coderepeat': check_repeat}
         try:
             stdvalue = check_routine[type](result, fname)
+            stdvalue = float("%.3f" % stdvalue)
         except Exception, e:
             response['info'] = "%s, please contact administrator" % e
 

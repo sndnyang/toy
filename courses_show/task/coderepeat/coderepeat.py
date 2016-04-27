@@ -243,6 +243,6 @@ if __name__ == "__main__":
     comments, vs, code = compare_files(aname, bname, cmp_func)
    #print code[0]
    #print code[1]
-   #for i in range(len(code[0])):
-   #    print code[0][i], code[1][i]
+    for i in range(len(code[0])):
+        print code[0][i], code[1][i]
     print code[2]

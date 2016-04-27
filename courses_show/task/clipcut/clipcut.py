@@ -2,6 +2,7 @@
 
 import os
 import cgi
+import heapq
 import logging
 
 debug = 0
@@ -16,25 +17,12 @@ def clip_code():
 
 def overlap(a, b):
     
-    if b[0] >= a[0] and b[0] <= a[2]:
-        return True
-    if b[2] >= a[0] and b[2] <= a[2]:
-        return True
-    if b[1] >= a[1] and b[1] <= a[3]:
-        return True
-    if b[3] >= a[1] and b[3] <= a[3]:
-        return True
+    if b[0] >= a[2] or b[1] >= a[3]:
+        return False
+    elif a[0] >= b[2] or a[1] >= b[3]:
+        return False
+    return True
 
-    if b[2] >= a[0] and b[0] <= a[0]:
-        return True
-    if b[2] >= a[2] and b[0] <= a[2]:
-        return True
-    if b[3] >= a[1] and b[1] <= a[1]:
-        return True
-    if b[3] >= a[3] and b[1] <= a[3]:
-        return True
-
-    return False
 
 def check_clip(data, fname):
     fn = os.path.join("competition/clip", fname)
@@ -60,18 +48,20 @@ def check_clip(data, fname):
                 logging.debug(e)
                 logging.debug(other)
                 return -1
-        for b in defects:
-            if overlap(e, b):
-                logging.debug(b)
-                return -1
+       #for b in defects:
+       #    if e[:4] != b and overlap(e, b):
+       #        logging.debug(e)
+       #        logging.debug(b)
+       #        print e, b
+       #        return -1
 
         i+=1
-    l = min(e[0] for e in data)
-    r = max(e[2] for e in data)
-    b = min(e[1] for e in data)
-    u = max(e[3] for e in data)
-    area = sum((e[2]-e[0])*(e[3]-e[1]) for e in data)
-    return 1.0*area/((u-b+1)*(r-l+1))
+    l = min(e[0] for e in data if len(e) == 4)
+    r = max(e[2] for e in data if len(e) == 4)
+    b = min(e[1] for e in data if len(e) == 4)
+    u = max(e[3] for e in data if len(e) == 4)
+    area = sum((e[2]-e[0])*(e[3]-e[1]) for e in data if len(e) == 4)
+    return 1.0*area/((u-b)*(r-l))
 
 
 def npAlter(r, c):
@@ -83,14 +73,14 @@ def npAlter(r, c):
 
 def copy(origin, h):
     if np:
-        target = np.zeros((h, len(origin[0])), dtype=np.int8)
+        targets = np.zeros((h, len(origin[0])), dtype=np.int8)
     else:
-        target = npAlter(h, len(origin[0]))
+        targets = npAlter(h, len(origin[0]))
 
     for i in range(h):
         for j in range(len(origin[1])):
-            target[i][j] = origin[i][j]
-    return target
+            targets[i][j] = origin[i][j]
+    return targets
 
 
 def commandLine(m):
@@ -114,31 +104,29 @@ def init_matrix(canvas):
 
 class GeniusTailor:
 
-    def __init__(self, canvas, targets):
+    def __init__(self, canvas, targets, defects):
         self.canvas = canvas
         self.h = canvas[0]
         self.w = canvas[1]
+
+        self.defects = defects
+
         targets = sorted(targets, key=lambda x:max(x), reverse=True)
         if debug == 1:
             print targets
+
         self.targets = []
         for e in targets:
-            e = list(e)
-            e.append(e[0])
-            e.append(e[1])
-            e.append(0)
-            e.append(0)
             self.targets.append(e[:])
 
         if np:
             self.used = np.zeros(len(targets), dtype=np.int8)
         else:
             self.used = [0] * len(targets)
-        self.min_h = sum(max(e) for e in targets)
+
         self.solution = None
-        self.solution_matrix = None
         self.per_node = []
-        self.m = init_matrix((max(self.min_h, self.h), canvas[1]))
+        self.used = []
 
     def can_place(self, x, y, h, w):
 
@@ -214,6 +202,32 @@ class GeniusTailor:
                 self.unplace(e, plen)
 
             if flag: break
+
+    def clip_cut_greedy(self, type="side"):
+        if type == "area":
+            sorted(self.targets, key=lambda x:x[0]*x[1], reverse=True)
+
+        self.per_node = [(0, (0, 0))]
+        heapq.heapify(self.per_node)
+        i = 0
+        while len(self.per_node):
+            min_node = heapq.heappop(self.per_node)
+            x, y = min_node[1][0], min_node[1][1]
+            nearest_defect = self.find_near_defect(x, y)
+
+            diff0 = abs(x + self.targets[i][0] - y - self.targets[i][1])
+            diff1 = abs(x + self.targets[i][1] - y - self.targets[i][0])
+
+            if diff0 <= diff1:
+                if self.canAddNode(min_node[1], self.targets[i]):
+                    break
+                elif self.canAddNode(min_node[1], self.targets[i][::-1]):
+                    break
+                else:
+                    nodes = self.pass_defects()
+
+
+
 
     def clip_greedy(self, type="side"):
         if type == "area":
@@ -340,17 +354,32 @@ if __name__ == '__main__':
     canvas = content[0].split()
     x = int(canvas[0])
     y = int(canvas[1])
+    piece_num = int(canvas[2])
     pieces = []
-    for r in content[1:]:
+    defects = []
+
+    for r in content[1:piece_num+1]:
         l = [int(e) for e in r.split()]
-        if len(l) != 2:
+        if len(l) < 2 or len(l) > 3:
             print "data is wrong in", r
             sys.exit()
-            
-        pieces.append(l)
 
-    demo = GeniusTailor((x, y), pieces)
-    s, h = demo.clip_greedy()
+        if len(l) == 3:
+            for i in range(l[2]):
+                pieces.append([l[0], l[1]])
+        else:
+            pieces.append(l)
+
+    for r in content[piece_num+1:]:
+        l = [int(e) for e in r.split()]
+        if len(l) != 4:
+            print "data is wrong in", r
+            sys.exit()
+        defects.append(l)
+
+    demo = GeniusTailor((x, y), pieces, defects)
+    #s, h = demo.clip_greedy()
+    s, h = demo.clip_cut_greedy()
     end = time.time()
     print 'the minimum height is ', h
     print 'use time', end-start

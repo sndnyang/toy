@@ -45,26 +45,43 @@
 
     function initcanvas() {
         instance = Processing.getInstanceById("cloth");
-        canvas[0] = document.getElementById("clength").value;
+        canvas[0] = document.getElementById("cheight").value;
         canvas[1] = document.getElementById("cwidth").value;
         instance.setup();
     }
 
     function showSolution(data) {
-        pieces = data.solution;
         var testdatas = data.data[0],
-            line = testdatas.split('\n')[0].split(' ');
+            line = testdatas.split('\n')[0].split(' '),
+            solution_output = '',
+            max_x = 0, max_y = 0;
+
+        pieces = data.solution;
         canvas[0] = line[0];
         canvas[1] = line[1];
 
-        $("#clength").val(line[0]);
-        $("#cwidth").val(line[1]);
         $("#target").val(testdatas);
-        $("#solution").val(data.solution);
+
         for (var i in pieces) {
+            if (pieces[i][2] > max_x) {
+                max_x = pieces[i][2];
+            }
             pieces[i][2] = pieces[i][2] - pieces[i][0];
             pieces[i][3] = pieces[i][3] - pieces[i][1];
+            solution_output += pieces[i] + '\n';
         }
+
+        console.log(max_x + ' ' + line);
+        if (max_x > line[0] && max_x < line[1]) {
+            $("#cheight").val(line[1]);
+            $("#cwidth").val(line[0]);
+        }
+
+        else {
+            $("#cheight").val(line[0]);
+            $("#cwidth").val(line[1]);
+        }
+        $("#solution").val(solution_output);
         if (typeof(instance) === "undefined") {
             instance = Processing.getInstanceById("cloth");
             instance.setup();
@@ -78,7 +95,7 @@
 
     function clip() {
         var target = document.getElementById("target").value;
-        canvas[0] = document.getElementById("clength").value;
+        canvas[0] = document.getElementById("cheight").value;
         canvas[1] = document.getElementById("cwidth").value;
         
         var radio = document.getElementsByName("form1");
@@ -111,17 +128,35 @@ void setup() {
     else {
         times = max / canvas[1];
     }
-    size(canvas[1] * times, canvas[0] * times);
+    size(canvas[0] * times, canvas[1] * times);
     background(180);
     stroke(100);
 
 }
 
 void drawFabric() {
+    var cl = color(255, 0, 0);
     for (int i = 0; i < pieces.length(); i++) {
         for (int j = 0; j < 4; j++) {
             pieces[i][j] *= times;
         }
+        if (pieces[i].length == 5) {
+            console.log(pieces[i]);
+            console.log(pieces[i][4]);
+            console.log(typeof(pieces[i][4]));
+            if (pieces[i][4] === 1) {
+                cl = color(0, 255, 0);
+                fill(cl);
+            } else {
+                cl = color(255, 0, 0);
+                fill(cl);
+            }
+        }
+        else {
+            cl = color(255);
+            fill(cl);
+        }
+
         rect(pieces[i][0],pieces[i][1],pieces[i][2],pieces[i][3]);
     }
 }
@@ -145,7 +180,7 @@ void drawFabric() {
 <input type = "radio" id = "form1" name = "form1" value = "search">全局搜索
 <input type = "radio" id = "form1" name = "form1" value = "greedy">贪心
 <p>请输入布匹大小</p>
-长度: <input id="clength" type="text" value="200" onchange="initcanvas()"></input>
+高度: <input id="cheight" type="text" value="200" onchange="initcanvas()"></input>
 宽度: <input id="cwidth" type="text" value="100" onchange="initcanvas()"></input>
 
 <p>请输入目标块的大小</p>

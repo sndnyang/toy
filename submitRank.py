@@ -21,7 +21,7 @@ def get_clip_jdata(lines):
         if not l:
             continue
         e = l.strip().split()
-        if len(e) != 4:
+        if len(e) < 4 or len(e) > 5:
             print e
             error_exit('data format wrong, 4 values per line')
         data.append(e)
@@ -56,7 +56,10 @@ def post(jdata):
         jdata = json.dumps(jdata)             # 对数据进行JSON格式化编码
         req = urllib2.Request(url, jdata)       # 生成页面请求的完整数据
         response = urllib2.urlopen(req)       # 发送页面请求
-        print response.read()                    # 获取服务器返回的页面信息
+        ret_data = response.read()                    # 获取服务器返回的页面信息
+
+        if 'success' not in ret_data:
+            print jdata['fname'], ret_data
 
     except Exception, e:
         print e
@@ -112,7 +115,7 @@ if __name__ == "__main__":
    #    error_exit("content format wrong")
 
     jdata = function_map[type](lines)
-    print jdata
+    #print jdata
 
     post(jdata)
 
