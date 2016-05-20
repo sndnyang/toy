@@ -115,31 +115,15 @@ class ClipPage(Handler):
         pieces = data.get('pieces')
         types = data.get('type')
 
-        canvas[0] = int(canvas[0])
-        canvas[1] = int(canvas[1])
-
         pdata = [int(e) for e in pieces.split()]
-        pieces = [[]]
 
-        if len(pdata)%2:
-            self.response.out.write(u"布料大小不成对")
-
-        count = 0
-        for i in range(len(pdata)):
-            pieces[count].append(pdata[i])
-            if i % 2:
-                count += 1
-                pieces.append([])
-
-        pieces.pop()
-
-        tailor = GeniusTailor(canvas, pieces)
+       #tailor = GeniusTailor(canvas, pieces)
        #if type == "search":
        #    s, h = tailor.clip_fabric()
        #else:
        #    s, h = tailor.clip_greedy()
 
-        solution = [[1, 2, 20, 30]]
+       #solution = [[1, 2, 20, 30]]
        #for r in s:
        #    solution.append([r[5], r[4], r[3]-r[5], r[2]-r[4]])
 
