@@ -1,35 +1,41 @@
-<!doctype html>
-<!--[if gt IE 8]><!--> 
-<html class="no-js"> <!--<![endif]-->
-<head>
-<meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<title>算法作业 点名</title>
+{% extends "base.html" %}
+{% block body %}
 
+<!--<link rel="stylesheet" type="text/css" href="/static/css/style.css" />-->
+<script src="static/js/rollcall.js"></script>
+<script src="static/js/UploadFile.js"></script>
 
-<!-- build:css({.tmp,app}) styles/main.css -->    
-<link rel="stylesheet" href="static/css/bootstrap.css">
-<link rel="stylesheet" href="static/css/main.css">
-<!-- endbuild -->
-</head>
-<body>
+<h1 class="keTitle">
+    <a href="/">返回首页</a>
+    算法作业 点名
+</h1>
 
-<!-- build:js scripts/modules.js 
-  <script src="/static/js/jquery-2.0.3.min.js"></script>
-  <script src="/static/js/angular.min.js"></script>
-  <script src="/static/js/d3.min.js"></script>
--->  
-<!-- endbuild -->
+<div>
+    可上传文件
+    <input type="file" id="file" onchange="uploadFiles(this.files)">
+    <br> 每行格式： 姓名,点名次数（可选),缺课次数（可选）
+</div>
 
-<!-- build:js({.tmp,app}) scripts/scripts.js 
-  <script src="static/js/app.js"></script>
-  <script src="static/js/controllers/main.js"></script>  
-  endbuild -->
+<div class="kePublic">
+    <!--效果html开始-->
+    <div style="width:620px;margin:20px auto 0 auto;">
+        <input type="button" value="开始旋转" onClick="spin();" style="float: left;" />
+        <input type="button" value="重新点名" onClick="reset();" style="float: left;" />
+        <input type="button" value="缺席" onClick="absent();" style="float: left;" />
+        <input type="button" value="保存" onClick="save();" style="float: left;" />
+        <div id="downloadLinkWrap"></div>
+        <canvas id="wheelcanvas" width="1000" height="1000"></canvas>
+    </div>
 
-<a href="/">返回首页</a>
-<br>
-<hr>
-未实现
+    <script type="text/javascript">
+        initDraw();
+    </script>
 
-</body>
-</html>
+    <div class="clear"></div>
+</div>
+<div class="keBottom">
+    <p class="keTxtP">科e互联网页特效集锦---更多特效请访问 <a class="keUrl" href="http://www.internetke.com" target="_blank">www.internetke.com</a></p>
+    </p>
+    <p class="keTxtP">＊尊重他人劳动成果，转载请自觉注明出处！注：此代码为【科e整理/原创特效】仅供学习交流，请勿用于商业用途。
+</div>
+{% endblock %}
