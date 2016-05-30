@@ -6,6 +6,7 @@ var callInClass = [];
 var rollIndex = null;
 
 var totalPieces = names.length * 20;
+var originPieces = names.length * 20;
 var names_num = names.length;
 var startAngle = 0;
 var arc = 2 * Math.PI;
@@ -20,14 +21,15 @@ function reset() {
     for (var i in callInClass) {
         callInClass[i] = 0;
     }
+    totalPieces = originPieces;
     draw();
 }
 
 function absent() {
     if (rollIndex) {
         absentTimes[rollIndex] += 1;
+        totalPieces -= 4 * (absentTimes[rollIndex] - 1);
     }
-    totalPieces -= 4;
     draw();
 }
 
@@ -69,6 +71,9 @@ function updateData(content) {
         callInClass.push(0);
         totalPieces += 20 - 2 * callTime + 4 * absentTime;
     }
+
+    originPieces = totalPieces;
+
     names_num = names.length;
     arc = 2 * Math.PI;
     draw();
@@ -92,6 +97,7 @@ function drawRouletteWheel() {
         ctx.strokeStyle = "black";
         ctx.lineWidth = 2;
         ctx.font = 'bold 12px sans-serif';
+        //console.log(names_num);
         for(var i = 0; i < names_num; i++) {
             if (callInClass[i]) {
                 continue;
@@ -147,39 +153,42 @@ function rotateWheel() {
         stopRotateWheel();
         return;
     }
+
     var spinAngle = spinAngleStart - easeOut(spinTime, 0, spinAngleStart, spinTimeTotal);
+
     startAngle += (spinAngle * Math.PI / 180);
-    console.log(startAngle);
+    //console.log('final angle? in what? ' + startAngle);
+
     drawRouletteWheel();
     spinTimeout = setTimeout('rotateWheel()', 30);
 }
 
 function stopRotateWheel() {
     clearTimeout(spinTimeout);
-    var degrees = (startAngle * 180 / Math.PI + 90) % 360;
-    console.log(startAngle + ' degree ' + degrees);
-    //var degrees = startAngle
-    var arcd = arc * 180 / Math.PI;
-    var index = Math.floor((360 - degrees) / arcd);
+    var degrees = (startAngle * 180 / Math.PI + 90) % 360,
+        arrow = 360 - degrees;
+    //console.log(startAngle + ' degree ' + degrees + ' arrow at ' + arrow);
+    var index = 0;
 
     for (var i = 0; i < names.length; i++) {
+
         if (callInClass[i])
             continue;
 
         var localarc = 360 * (20 - 2 * callTimes[i] + 4 * absentTimes[i]) / totalPieces;
         //console.log(i + ' ' + localarc);
 
-        if (degrees - localarc < 0) {
-            console.log(i);
+        if (arrow - localarc < 0) {
+            //console.log(i);
             index = i;
             break;
         }
 
-        degrees -= localarc;
+        arrow -= localarc;
     }
 
-    console.log(index);
-    console.log(callInClass[index]);
+  //console.log(index);
+  //console.log(callInClass[index]);
     ctx.save();
     var text = names[index];
 
