@@ -14,3 +14,4 @@ pip*
 *.jar
 
 competition
+courses_show/submitRank/submitRank.py
